@@ -14,7 +14,7 @@ namespace TechA.Api.Controllers
             _weatherForecastService = weatherForecastService;
         }
 
-        [HttpGet(Name = "GetWeatherForecast")]
+        [HttpGet]
         public IEnumerable<WeatherForecast> Get()
         {
             var forecasts = _weatherForecastService.GetWeatherForecasts(5);
