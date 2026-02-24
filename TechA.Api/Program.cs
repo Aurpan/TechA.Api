@@ -1,5 +1,4 @@
-using TechA.Repository.Extensions;
-using TechA.Service.Extensions;
+using TechA.DependencyInjection.Extensions;
 
 public partial class Program
 {
@@ -13,8 +12,7 @@ public partial class Program
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
-        builder.Services.AddRepositories(builder.Configuration);
-        builder.Services.AddServices();
+        builder.Services.AddApplicationServices(builder.Configuration);
 
         var app = builder.Build();
 

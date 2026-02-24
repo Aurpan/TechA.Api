@@ -11,8 +11,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TechA.DependencyInjection\TechA.DependencyInjection.csproj" />
     <ProjectReference Include="..\TechA.Service\TechA.Service.csproj" />
-    <ProjectReference Include="..\TechA.Repository\TechA.Repository.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>

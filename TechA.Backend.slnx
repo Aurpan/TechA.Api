@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="TechA.Api/TechA.Api.csproj" />
+  <Project Path="TechA.DependencyInjection/TechA.DependencyInjection.csproj" />
   <Project Path="TechA.Repository/TechA.Repository.csproj" Id="02dbeefa-886b-4560-87a4-d1e8327acd2f" />
   <Project Path="TechA.Service/TechA.Service.csproj" Id="52cceec4-e09d-406c-8212-de9552214794" />
 </Solution>
