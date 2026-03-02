@@ -15,8 +15,4 @@
     <ProjectReference Include="..\TechA.Service\TechA.Service.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
 </Project>
