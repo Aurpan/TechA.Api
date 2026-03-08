@@ -1,3 +1,4 @@
+using TechA.Api.WebSockets;
 using TechA.DependencyInjection.Extensions;
 
 public partial class Program
@@ -19,10 +20,12 @@ public partial class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseWebSockets();
 
         app.UseAuthentication();
         app.UseAuthorization();
 
+        app.MapAudioStreamEndpoints();
         app.MapControllers();
 
         app.Run();

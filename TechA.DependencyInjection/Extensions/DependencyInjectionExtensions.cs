@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using TechA.Core.DTOs;
 using TechA.Core.Interfaces.Service;
 using TechA.Repository.Data;
 using TechA.Repository.Interfaces;
@@ -43,13 +44,32 @@ public static class DependencyInjectionExtensions
                 IssuerSigningKey = new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(jwtSection["Key"]!))
             };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+
+                    if (!string.IsNullOrEmpty(accessToken)
+                        && context.HttpContext.WebSockets.IsWebSocketRequest)
+                    {
+                        context.Token = accessToken;
+                    }
+
+                    return Task.CompletedTask;
+                }
+            };
         });
+
+        services.Configure<AudioStream>(configuration.GetSection(AudioStream.SectionName));
 
         services.AddScoped<IUserRepository, UserRepository>();
 
         services.AddScoped<IHealthCheckService, HealthCheckService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserProfileService, UserProfileService>();
+        services.AddTransient<IAudioStreamService, AudioStreamService>();
 
         return services;
     }
