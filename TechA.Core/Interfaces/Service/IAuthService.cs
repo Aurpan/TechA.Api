@@ -1,5 +1,5 @@
 using TechA.Core.RequestObjects.Auth;
-using TechA.Core.ResponseObjects.Auth;
+using TechA.Core.ResponseObjects;
 
 namespace TechA.Core.Interfaces.Service;
 

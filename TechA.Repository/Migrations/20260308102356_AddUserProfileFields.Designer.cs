@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TechA.Repository.Data;
@@ -11,9 +12,11 @@ using TechA.Repository.Data;
 namespace TechA.Repository.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260308102356_AddUserProfileFields")]
+    partial class AddUserProfileFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,54 +74,16 @@ namespace TechA.Repository.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Address")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("address");
+
                     b.Property<string>("AuthProvider")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("auth_provider");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
-
-                    b.Property<string>("DisplayName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("display_name");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)")
-                        .HasColumnName("email");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("text")
-                        .HasColumnName("password_hash");
-
-                    b.HasKey("Id")
-                        .HasName("pk_users");
-
-                    b.HasIndex("Email")
-                        .IsUnique()
-                        .HasDatabaseName("ix_users_email");
-
-                    b.ToTable("users", (string)null);
-                });
-
-            modelBuilder.Entity("TechA.Repository.Entities.UserProfile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Address")
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)")
-                        .HasColumnName("address");
 
                     b.Property<string>("Bio")
                         .HasMaxLength(500)
@@ -140,9 +105,26 @@ namespace TechA.Repository.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("country");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+
                     b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("date")
                         .HasColumnName("date_of_birth");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("display_name");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("email");
 
                     b.Property<string>("FirstName")
                         .HasMaxLength(50)
@@ -154,6 +136,10 @@ namespace TechA.Repository.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("last_name");
 
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text")
+                        .HasColumnName("password_hash");
+
                     b.Property<string>("ProfilePictureUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
@@ -164,23 +150,19 @@ namespace TechA.Repository.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("state");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
                     b.Property<string>("ZipCode")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("zip_code");
 
                     b.HasKey("Id")
-                        .HasName("pk_user_profiles");
+                        .HasName("pk_users");
 
-                    b.HasIndex("UserId")
+                    b.HasIndex("Email")
                         .IsUnique()
-                        .HasDatabaseName("ix_user_profiles_user_id");
+                        .HasDatabaseName("ix_users_email");
 
-                    b.ToTable("user_profiles", (string)null);
+                    b.ToTable("users", (string)null);
                 });
 
             modelBuilder.Entity("TechA.Repository.Entities.RefreshToken", b =>
@@ -195,22 +177,8 @@ namespace TechA.Repository.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TechA.Repository.Entities.UserProfile", b =>
-                {
-                    b.HasOne("TechA.Repository.Entities.User", "User")
-                        .WithOne("Profile")
-                        .HasForeignKey("TechA.Repository.Entities.UserProfile", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_user_profiles_users_user_id");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("TechA.Repository.Entities.User", b =>
                 {
-                    b.Navigation("Profile");
-
                     b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618

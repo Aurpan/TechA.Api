@@ -16,12 +16,11 @@ public class User
     [MaxLength(100)]
     public string? DisplayName { get; set; }
 
-    [MaxLength(500)]
-    public string? ProfilePictureUrl { get; set; }
-
     public AuthProvider AuthProvider { get; set; } = AuthProvider.Email;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public UserProfile? Profile { get; set; }
 
     public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
 }

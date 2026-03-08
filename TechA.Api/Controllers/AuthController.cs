@@ -23,7 +23,7 @@ public class AuthController : ControllerBase
         if (!result.Success)
             return BadRequest(new { result.Message });
 
-        return Ok(new { result.Token });
+        return Ok(new { result.Token, result.User });
     }
 
     [HttpPost("login")]
@@ -34,7 +34,7 @@ public class AuthController : ControllerBase
         if (!result.Success)
             return Unauthorized(new { result.Message });
 
-        return Ok(new { result.Token });
+        return Ok(new { result.Token, result.User });
     }
 
     [HttpPost("google")]
@@ -45,6 +45,6 @@ public class AuthController : ControllerBase
         if (!result.Success)
             return Unauthorized(new { result.Message });
 
-        return Ok(new { result.Token });
+        return Ok(new { result.Token, result.User });
     }
 }

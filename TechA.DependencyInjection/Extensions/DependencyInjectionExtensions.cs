@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using TechA.Core.Interfaces.Service;
 using TechA.Repository.Data;
+using TechA.Repository.Interfaces;
+using TechA.Repository.Repositories;
 using TechA.Service;
 
 namespace TechA.DependencyInjection.Extensions;
@@ -43,8 +45,11 @@ public static class DependencyInjectionExtensions
             };
         });
 
+        services.AddScoped<IUserRepository, UserRepository>();
+
         services.AddScoped<IHealthCheckService, HealthCheckService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUserProfileService, UserProfileService>();
 
         return services;
     }

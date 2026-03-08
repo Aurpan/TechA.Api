@@ -5,10 +5,11 @@ using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using TechA.Core.DTOs;
 using TechA.Core.Enums;
 using TechA.Core.Interfaces.Service;
 using TechA.Core.RequestObjects.Auth;
-using TechA.Core.ResponseObjects.Auth;
+using TechA.Core.ResponseObjects;
 using TechA.Repository.Data;
 using TechA.Repository.Entities;
 
@@ -34,18 +35,18 @@ public class AuthService : IAuthService
             return new AuthResponse { Success = false, Message = "Email is already registered." };
         }
 
-        var user = new User
+        var user = new Repository.Entities.User
         {
             Email = request.Email,
-            DisplayName = request.DisplayName,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            DisplayName = request.DisplayName,
             AuthProvider = AuthProvider.Email
         };
 
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();
 
-        return new AuthResponse { Success = true, Token = GenerateJwtToken(user) };
+        return new AuthResponse { Success = true, Token = GenerateJwtToken(user), User = MapToDto(user) };
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
@@ -55,7 +56,7 @@ public class AuthService : IAuthService
         if (user is null || user.PasswordHash is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return new AuthResponse { Success = false, Message = "Invalid credentials." };
 
-        return new AuthResponse { Success = true, Token = GenerateJwtToken(user) };
+        return new AuthResponse { Success = true, Token = GenerateJwtToken(user), User = MapToDto(user) };
     }
 
     public async Task<AuthResponse> GoogleSignInAsync(GoogleAuthRequest request)
@@ -80,22 +81,34 @@ public class AuthService : IAuthService
 
         if (user is null)
         {
-            user = new User
+            user = new Repository.Entities.User
             {
                 Email = payload.Email,
                 DisplayName = payload.Name,
-                ProfilePictureUrl = payload.Picture,
-                AuthProvider = AuthProvider.Google
+                AuthProvider = AuthProvider.Google,
+                Profile = new Repository.Entities.UserProfile
+                {
+                    ProfilePictureUrl = payload.Picture
+                }
             };
 
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
         }
 
-        return new AuthResponse { Success = true, Token = GenerateJwtToken(user) };
+        return new AuthResponse { Success = true, Token = GenerateJwtToken(user), User = MapToDto(user) };
     }
 
-    private string GenerateJwtToken(User user)
+    private static Core.DTOs.User MapToDto(Repository.Entities.User user) => new()
+    {
+        Id = user.Id,
+        Email = user.Email,
+        DisplayName = user.DisplayName,
+        AuthProvider = user.AuthProvider.ToString(),
+        CreatedAt = user.CreatedAt
+    };
+
+    private string GenerateJwtToken(Repository.Entities.User user)
     {
         var jwtSection = _configuration.GetSection("Jwt");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));
