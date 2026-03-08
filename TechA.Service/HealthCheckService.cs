@@ -4,7 +4,7 @@ using TechA.Core.Interfaces.Service;
 using TechA.Core.ResponseObjects;
 using TechA.Repository.Data;
 
-namespace TechA.Service.HealthCheck;
+namespace TechA.Service;
 
 public class HealthCheckService : IHealthCheckService
 {

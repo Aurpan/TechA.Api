@@ -1,17 +1,40 @@
 using Microsoft.EntityFrameworkCore;
+using TechA.Repository.Entities;
 
-namespace TechA.Repository.Data
+namespace TechA.Repository.Data;
+
+public class ApplicationDbContext : DbContext
 {
-    public class ApplicationDbContext : DbContext
-    {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
+    public DbSet<User> Users { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : base(options)
+    {
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<User>(entity =>
         {
-            base.OnModelCreating(modelBuilder);
-        }
+            entity.HasIndex(u => u.Email).IsUnique();
+            entity.Property(u => u.AuthProvider)
+                  .HasConversion<string>()
+                  .HasMaxLength(20);
+            entity.Property(u => u.CreatedAt).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasIndex(rt => rt.Token).IsUnique();
+            entity.Property(rt => rt.Token).HasMaxLength(256);
+
+            entity.HasOne(rt => rt.User)
+                  .WithMany(u => u.RefreshTokens)
+                  .HasForeignKey(rt => rt.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
