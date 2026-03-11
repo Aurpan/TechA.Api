@@ -13,12 +13,14 @@ public class AudioStreamService : IAudioStreamService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    private readonly AudioStream _options;
+    private readonly AudioStream _audioStream;
+    private readonly ILlmService _llmService;
     private readonly ILogger<AudioStreamService> _logger;
 
-    public AudioStreamService(IOptions<AudioStream> options, ILogger<AudioStreamService> logger)
+    public AudioStreamService(IOptions<AudioStream> options, ILlmService llmService, ILogger<AudioStreamService> logger)
     {
-        _options = options.Value;
+        _audioStream = options.Value;
+        _llmService = llmService;
         _logger = logger;
     }
 
@@ -29,10 +31,10 @@ public class AudioStreamService : IAudioStreamService
 
         try
         {
-            var tokenToUse = string.IsNullOrEmpty(_options.SttApiToken) ? sttToken : _options.SttApiToken;
-            var sttUrl = $"{_options.DownstreamServiceUrl}?token={Uri.EscapeDataString(tokenToUse)}";
+            var tokenToUse = string.IsNullOrEmpty(_audioStream.SttApiToken) ? sttToken : _audioStream.SttApiToken;
+            var sttUrl = $"{_audioStream.DownstreamServiceUrl}?token={Uri.EscapeDataString(tokenToUse)}";
             await downstream.ConnectAsync(new Uri(sttUrl), cts.Token);
-            _logger.LogInformation("Connected to STT service at {Url} for session {SessionId}.", _options.DownstreamServiceUrl, sessionId);
+            _logger.LogInformation("Connected to STT service at {Url} for session {SessionId}.", _audioStream.DownstreamServiceUrl, sessionId);
 
             var clientToDownstream = ForwardClientToDownstreamAsync(clientSocket, downstream, sessionId, cts.Token);
             var downstreamToClient = ForwardDownstreamToClientAsync(downstream, clientSocket, sessionId, cts.Token);
@@ -43,6 +45,19 @@ public class AudioStreamService : IAudioStreamService
             {
                 _logger.LogInformation("Client audio stream ended for session {SessionId}. Waiting for stt.final from downstream.", sessionId);
                 await downstreamToClient;
+            }
+
+            var sttResult = downstreamToClient.Result;
+
+            if (sttResult is not null)
+            {
+                _logger.LogInformation("Calling LLM for session {SessionId} with text: \"{Text}\".", sessionId, sttResult.Text);
+                await _llmService.StreamToClientAsync(
+                    sessionId,
+                    sttResult.Text ?? string.Empty,
+                    sttResult.Language ?? "en",
+                    clientSocket,
+                    cancellationToken);
             }
 
             await cts.CancelAsync();
@@ -67,7 +82,7 @@ public class AudioStreamService : IAudioStreamService
 
     private async Task ForwardClientToDownstreamAsync(WebSocket client, WebSocket downstream, string sessionId, CancellationToken cancellationToken)
     {
-        var buffer = ArrayPool<byte>.Shared.Rent(_options.BufferSize);
+        var buffer = ArrayPool<byte>.Shared.Rent(_audioStream.BufferSize);
         var audioBytesReceived = 0L;
         var audioChunksReceived = 0;
         var startReceived = false;
@@ -202,9 +217,10 @@ public class AudioStreamService : IAudioStreamService
         return Encoding.UTF8.GetString(stream.ToArray());
     }
 
-    private async Task ForwardDownstreamToClientAsync(WebSocket source, WebSocket destination, string sessionId, CancellationToken cancellationToken)
+    private async Task<SttFinalResult?> ForwardDownstreamToClientAsync(WebSocket source, WebSocket destination, string sessionId, CancellationToken cancellationToken)
     {
-        var buffer = ArrayPool<byte>.Shared.Rent(_options.BufferSize);
+        var buffer = ArrayPool<byte>.Shared.Rent(_audioStream.BufferSize);
+        SttFinalResult? sttResult = null;
 
         try
         {
@@ -245,6 +261,7 @@ public class AudioStreamService : IAudioStreamService
                                 "Received stt.final for session {SessionId}: lang={Language}, text=\"{Text}\".",
                                 sessionId, language, text);
 
+                            sttResult = new SttFinalResult { Text = text, Language = language };
                             break;
                         }
                     }
@@ -259,6 +276,8 @@ public class AudioStreamService : IAudioStreamService
         {
             ArrayPool<byte>.Shared.Return(buffer);
         }
+
+        return sttResult;
     }
 
     private async Task TryCloseAsync(WebSocket socket)

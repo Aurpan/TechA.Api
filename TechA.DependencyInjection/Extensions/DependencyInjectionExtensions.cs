@@ -63,6 +63,7 @@ public static class DependencyInjectionExtensions
         });
 
         services.Configure<AudioStream>(configuration.GetSection(AudioStream.SectionName));
+        services.Configure<LlmStream>(configuration.GetSection(LlmStream.SectionName));
 
         services.AddScoped<IUserRepository, UserRepository>();
 
@@ -70,6 +71,12 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserProfileService, UserProfileService>();
         services.AddTransient<IAudioStreamService, AudioStreamService>();
+
+        var llmConfig = configuration.GetSection(LlmStream.SectionName);
+        services.AddHttpClient<ILlmService, LlmService>(client =>
+        {
+            client.BaseAddress = new Uri(llmConfig["BaseUrl"] ?? "https://api.techabd.live");
+        });
 
         return services;
     }
