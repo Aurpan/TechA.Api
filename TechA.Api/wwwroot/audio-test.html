@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio WebSocket Tester - PCM16</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+            .status.disconnected {
+                background: #fee;
+                color: #c33;
+                border: 2px solid #fcc;
+            }
+
+            .status.connecting {
+                background: #ffeaa7;
+                color: #d63031;
+                border: 2px solid #fdcb6e;
+            }
+
+            .status.connected {
+                background: #d4edda;
+                color: #155724;
+                border: 2px solid #c3e6cb;
+            }
+
+            .status.streaming {
+                background: #d1ecf1;
+                color: #0c5460;
+                border: 2px solid #bee5eb;
+                animation: pulse 2s infinite;
+            }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+            button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+        .btn-connect {
+            background: #667eea;
+            color: white;
+        }
+
+            .btn-connect:hover:not(:disabled) {
+                background: #5568d3;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            }
+
+        .btn-disconnect {
+            background: #ff6b6b;
+            color: white;
+        }
+
+            .btn-disconnect:hover:not(:disabled) {
+                background: #ee5a52;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+            }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .log-container {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-left: 3px solid transparent;
+        }
+
+            .log-entry.info {
+                border-left-color: #3498db;
+            }
+
+            .log-entry.success {
+                border-left-color: #2ecc71;
+            }
+
+            .log-entry.error {
+                border-left-color: #e74c3c;
+            }
+
+            .log-entry.warning {
+                border-left-color: #f39c12;
+            }
+
+        .log-timestamp {
+            color: #888;
+            margin-right: 10px;
+        }
+
+        .audio-visualizer {
+            height: 60px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .visualizer-bar {
+            width: 3px;
+            background: #667eea;
+            margin: 0 2px;
+            border-radius: 2px;
+            transition: height 0.1s;
+        }
+
+        .transcription-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .transcription-section h3 {
+            color: #555;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .transcription-result {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 50px;
+            font-size: 16px;
+            color: #333;
+            word-wrap: break-word;
+            transition: all 0.3s;
+        }
+
+        .transcription-result.has-final {
+            border-color: #2ecc71;
+            background: #d4edda;
+        }
+
+        .transcription-result .placeholder {
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .transcription-result .final-label {
+            display: inline-block;
+            background: #2ecc71;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .transcription-result .lang-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+
+        .transcription-result .final-text {
+            display: block;
+            margin-top: 8px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #155724;
+        }
+
+        .downstream-messages {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .downstream-msg {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+
+        .downstream-msg.final {
+            border-color: #2ecc71;
+            background: #eafaf1;
+        }
+
+            .log-entry.downstream {
+                border-left-color: #9b59b6;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Audio WebSocket Tester</h1>
+        <p class="subtitle">Test /ws/audio endpoint with live microphone (PCM16 format)</p>
+
+        <div class="config-section">
+            <div class="form-group">
+                <label for="wsUrl">WebSocket URL</label>
+                <input type="text" id="wsUrl" placeholder="wss://localhost:7178/ws/audio">
+            </div>
+            <div class="form-group">
+                <label for="authToken">Access Token (Required)</label>
+                <input type="text" id="authToken" placeholder="Enter your access token">
+            </div>
+            <div class="form-group">
+                <label for="audioFormat">Audio Format</label>
+                <input type="text" id="audioFormat" value="PCM16 (16-bit, 16kHz, Mono)" readonly style="background: #e9ecef; cursor: not-allowed;">
+            </div>
+            <div class="form-group">
+                <label for="chunkSize">Chunk Size (samples)</label>
+                <input type="number" id="chunkSize" value="4096" min="1024" max="8192" step="1024">
+            </div>
+        </div>
+
+        <div class="status disconnected" id="status">
+            ⚫ Disconnected
+        </div>
+
+        <div class="audio-visualizer" id="visualizer">
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+            <div class="visualizer-bar"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-connect" id="connectBtn">Connect & Stream</button>
+            <button class="btn-disconnect" id="disconnectBtn" disabled>Disconnect</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="bytesSent">0</div>
+                <div class="stat-label">Bytes Sent</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="chunksSent">0</div>
+                <div class="stat-label">Chunks Sent</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="duration">00:00</div>
+                <div class="stat-label">Duration</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="sampleRate">0</div>
+                <div class="stat-label">Sample Rate</div>
+            </div>
+        </div>
+
+        <!-- New session info stats display -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="sessionIdDisplay">N/A</div>
+                <div class="stat-label">Session ID</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="connectionTime">0</div>
+                <div class="stat-label">Connection Time</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="msgsReceived">0</div>
+                <div class="stat-label">Messages Received</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="bytesReceived">0 B</div>
+                <div class="stat-label">Bytes Received</div>
+            </div>
+        </div>
+
+        <div class="transcription-section">
+            <h3>📝 Transcription Result</h3>
+            <div class="transcription-result" id="transcriptionResult">
+                <span class="placeholder">Waiting for downstream response...</span>
+            </div>
+            <div class="downstream-messages" id="downstreamMessages"></div>
+        </div>
+
+        <div class="log-container" id="logContainer"></div>
+    </div>
+
+    <script>
+        let websocket = null;
+        let audioContext = null;
+        let audioStream = null;
+        let analyser = null;
+        let scriptProcessor = null;
+        let bytesSent = 0;
+        let chunksSent = 0;
+        let startTime = null;
+        let durationInterval = null;
+        let sessionId = null;
+        let connectionStartTime = null;
+        let messagesReceived = 0;
+        let bytesReceivedTotal = 0;
+
+        const SAMPLE_RATE = 16000; // 16kHz for speech recognition
+        const CHANNELS = 1; // Mono
+
+        function generateSessionId() {
+            return crypto.randomUUID();
+        }
+
+        function buildControlMessage(type) {
+            return JSON.stringify({
+                type: type,
+                sessionId: sessionId,
+                audio: { encoding: 'pcm_s16le', sampleRate: SAMPLE_RATE, channels: CHANNELS }
+            });
+        }
+
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const statusDiv = document.getElementById('status');
+        const logContainer = document.getElementById('logContainer');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span>${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function updateStatus(status, className) {
+            statusDiv.textContent = status;
+            statusDiv.className = `status ${className}`;
+        }
+
+        function updateStats() {
+            document.getElementById('bytesSent').textContent = formatBytes(bytesSent);
+            document.getElementById('chunksSent').textContent = chunksSent;
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function updateDuration() {
+            if (startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('duration').textContent = `${minutes}:${seconds}`;
+
+                // Update connection time in seconds
+                document.getElementById('connectionTime').textContent = elapsed;
+            }
+        }
+
+        function setupVisualizer(analyserNode) {
+            const bufferLength = analyserNode.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            const bars = document.querySelectorAll('.visualizer-bar');
+
+            document.getElementById('sampleRate').textContent = SAMPLE_RATE + ' Hz';
+
+            function visualize() {
+                if (!analyser) return;
+                requestAnimationFrame(visualize);
+                analyserNode.getByteFrequencyData(dataArray);
+
+                bars.forEach((bar, i) => {
+                    const value = dataArray[i] || 0;
+                    const height = (value / 255) * 60;
+                    bar.style.height = `${height}px`;
+                });
+            }
+
+            visualize();
+        }
+
+        // Convert Float32Array to Int16Array (PCM16)
+        function floatTo16BitPCM(float32Array) {
+            const buffer = new ArrayBuffer(float32Array.length * 2);
+            const view = new DataView(buffer);
+            let offset = 0;
+            for (let i = 0; i < float32Array.length; i++, offset += 2) {
+                let s = Math.max(-1, Math.min(1, float32Array[i]));
+                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+            }
+            return buffer;
+        }
+
+        async function requestMicrophoneAccess() {
+            try {
+                log('Requesting microphone access...', 'info');
+                audioStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: SAMPLE_RATE,
+                        channelCount: CHANNELS
+                    }
+                });
+                log('✓ Microphone access granted', 'success');
+                return true;
+            } catch (error) {
+                log(`✗ Microphone access denied: ${error.message}`, 'error');
+                alert('Microphone access is required. Please grant permission and try again.');
+                return false;
+            }
+        }
+
+        async function connectWebSocket() {
+            const baseUrl = document.getElementById('wsUrl').value || 'wss://localhost:7178/ws/audio';
+            const authToken = document.getElementById('authToken').value;
+
+            if (!authToken) {
+                log('✗ Access token is required', 'error');
+                alert('Please enter an access token');
+                return;
+            }
+
+            try {
+                // Build WebSocket URL with access_token query parameter
+                const url = new URL(baseUrl);
+                url.searchParams.append('access_token', authToken);
+                const wsUrl = url.toString();
+
+                updateStatus('🔄 Connecting...', 'connecting');
+                log(`Connecting to ${baseUrl}...`, 'info');
+
+                websocket = new WebSocket(wsUrl);
+                websocket.binaryType = 'arraybuffer';
+
+                websocket.onopen = () => {
+                    log('✓ WebSocket connected', 'success');
+                    updateStatus('🟢 Connected', 'connected');
+
+                    // Send start control message
+                    const startMsg = buildControlMessage('start');
+                    websocket.send(startMsg);
+                    log(`📤 Sent START message: ${startMsg}`, 'success');
+
+                    // Update session ID display
+                    document.getElementById('sessionIdDisplay').textContent = sessionId;
+
+                    startAudioStreaming();
+                };
+
+                websocket.onerror = (error) => {
+                    log(`✗ WebSocket error`, 'error');
+                    updateStatus('⚫ Error', 'disconnected');
+                };
+
+                websocket.onclose = (event) => {
+                    log(`WebSocket closed: Code ${event.code}, Reason: ${event.reason || 'None'}`, 'warning');
+                    updateStatus('⚫ Disconnected', 'disconnected');
+                    cleanup();
+                };
+
+                websocket.onmessage = (event) => {
+                    messagesReceived++;
+                    document.getElementById('msgsReceived').textContent = messagesReceived;
+
+                    if (typeof event.data === 'string') {
+                        bytesReceivedTotal += event.data.length;
+                        document.getElementById('bytesReceived').textContent = formatBytes(bytesReceivedTotal);
+
+                        log(`📩 Downstream: ${event.data}`, 'downstream');
+                        appendDownstreamMessage(event.data);
+
+                        try {
+                            const msg = JSON.parse(event.data);
+                            if (msg.type === 'stt.final') {
+                                showFinalTranscription(msg.text, msg.language);
+                            }
+                        } catch (e) {
+                            // non-JSON text, already logged
+                        }
+                    } else {
+                        bytesReceivedTotal += event.data.byteLength;
+                        document.getElementById('bytesReceived').textContent = formatBytes(bytesReceivedTotal);
+                        log(`📩 Received binary data (${event.data.byteLength} bytes)`, 'info');
+                    }
+                };
+
+            } catch (error) {
+                log(`✗ Connection failed: ${error.message}`, 'error');
+                updateStatus('⚫ Connection Failed', 'disconnected');
+                cleanup();
+            }
+        }
+
+        function startAudioStreaming() {
+            const chunkSize = parseInt(document.getElementById('chunkSize').value);
+
+            try {
+                // Create AudioContext with desired sample rate
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
+                const source = audioContext.createMediaStreamSource(audioStream);
+
+                // Create analyser for visualization
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 32;
+                source.connect(analyser);
+
+                // Create script processor for capturing PCM data
+                scriptProcessor = audioContext.createScriptProcessor(chunkSize, CHANNELS, CHANNELS);
+
+                scriptProcessor.onaudioprocess = (audioProcessingEvent) => {
+                    if (websocket && websocket.readyState === WebSocket.OPEN) {
+                        const inputBuffer = audioProcessingEvent.inputBuffer;
+                        const channelData = inputBuffer.getChannelData(0); // Get mono channel
+
+                        // Convert to PCM16
+                        const pcm16 = floatTo16BitPCM(channelData);
+
+                        // Send to WebSocket
+                        websocket.send(pcm16);
+                        bytesSent += pcm16.byteLength;
+                        chunksSent++;
+                        updateStats();
+                    }
+                };
+
+                source.connect(scriptProcessor);
+                scriptProcessor.connect(audioContext.destination);
+
+                setupVisualizer(analyser);
+
+                startTime = Date.now();
+                connectionStartTime = startTime;
+                durationInterval = setInterval(updateDuration, 1000);
+
+                updateStatus('🔴 Streaming', 'streaming');
+                log(`✓ Started streaming PCM16 audio (16-bit, ${SAMPLE_RATE}Hz, ${chunkSize} samples per chunk)`, 'success');
+
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+
+            } catch (error) {
+                log(`✗ Failed to start streaming: ${error.message}`, 'error');
+                cleanup();
+            }
+        }
+
+        function cleanup() {
+            if (scriptProcessor) {
+                scriptProcessor.disconnect();
+                scriptProcessor = null;
+            }
+
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+            }
+
+            if (audioContext && audioContext.state !== 'closed') {
+                audioContext.close();
+                audioContext = null;
+                analyser = null;
+            }
+
+            if (durationInterval) {
+                clearInterval(durationInterval);
+                durationInterval = null;
+            }
+
+            connectBtn.disabled = false;
+            disconnectBtn.disabled = true;
+            updateStatus('⚫ Disconnected', 'disconnected');
+            log('Disconnected and cleaned up resources', 'info');
+        }
+
+        function appendDownstreamMessage(text) {
+            const container = document.getElementById('downstreamMessages');
+            const div = document.createElement('div');
+            div.className = 'downstream-msg';
+            try {
+                const msg = JSON.parse(text);
+                if (msg.type === 'stt.final') div.classList.add('final');
+                div.textContent = `[${msg.type || 'unknown'}] ${text}`;
+            } catch {
+                div.textContent = text;
+            }
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showFinalTranscription(text, language) {
+            const el = document.getElementById('transcriptionResult');
+            el.classList.add('has-final');
+            el.innerHTML = `<span class="final-label">stt.final</span>`
+                + (language ? `<span class="lang-badge">${language}</span>` : '')
+                + `<span class="final-text">"${text || ''}"</span>`;
+            log(`🎯 STT FINAL: "${text}" (lang: ${language || 'N/A'})`, 'success');
+        }
+
+        connectBtn.addEventListener('click', async () => {
+            bytesSent = 0;
+            chunksSent = 0;
+            messagesReceived = 0;
+            bytesReceivedTotal = 0;
+            startTime = null;
+            sessionId = generateSessionId();
+            updateStats();
+            document.getElementById('msgsReceived').textContent = '0';
+            document.getElementById('bytesReceived').textContent = '0 B';
+            document.getElementById('transcriptionResult').innerHTML = '<span class="placeholder">Waiting for downstream response...</span>';
+            document.getElementById('transcriptionResult').classList.remove('has-final');
+            document.getElementById('downstreamMessages').innerHTML = '';
+            document.getElementById('duration').textContent = '00:00';
+
+            const hasAccess = await requestMicrophoneAccess();
+            if (hasAccess) {
+                await connectWebSocket();
+            }
+        });
+
+        disconnectBtn.addEventListener('click', () => {
+            // Send end control message before cleanup
+            if (websocket && websocket.readyState === WebSocket.OPEN && sessionId) {
+                // Stop audio capture first so no more binary frames are sent after end
+                if (scriptProcessor) {
+                    scriptProcessor.disconnect();
+                    scriptProcessor = null;
+                }
+
+                const endMsg = buildControlMessage('end');
+                websocket.send(endMsg);
+                log(`📤 Sent END message: ${endMsg}`, 'success');
+
+                // Brief delay so the end message is delivered before closing
+                setTimeout(() => cleanup(), 200);
+            } else {
+                cleanup();
+            }
+        });
+
+        // Set default WebSocket URL
+        window.addEventListener('load', () => {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const defaultUrl = `${protocol}//${window.location.host}/ws/audio`;
+            document.getElementById('wsUrl').value = defaultUrl;
+            log('🎤 Audio WebSocket Tester ready (PCM16 format)', 'success');
+            log('ℹ️  Audio format: PCM16 (16-bit, 16kHz, Mono)', 'info');
+            log('ℹ️  Get your JWT token from /api/v1/auth/login endpoint', 'info');
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            cleanup();
+        });
+    </script>
+</body>
+</html>

@@ -17,6 +17,22 @@ public partial class Program
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
+            
+            // Serve the audio test page in development only
+            app.MapGet("/audio-test", async context =>
+            {
+                var filePath = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "audio-test.html");
+                
+                if (!File.Exists(filePath))
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound;
+                    await context.Response.WriteAsync("Audio test page not found.");
+                    return;
+                }
+                
+                context.Response.ContentType = "text/html";
+                await context.Response.SendFileAsync(filePath);
+            });
         }
 
         app.UseHttpsRedirection();
