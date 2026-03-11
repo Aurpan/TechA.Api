@@ -7,4 +7,6 @@ public class AudioStream
     public string DownstreamServiceUrl { get; set; } = string.Empty;
 
     public int BufferSize { get; set; } = 4 * 1024;
+
+    public string SttApiToken { get; set; } = string.Empty;
 }

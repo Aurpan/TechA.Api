@@ -25,10 +25,20 @@ public static class AudioStreamEndpoints
                 return;
             }
 
+            var sttToken = context.Request.Query["access_token"].ToString();
+
+            if (string.IsNullOrEmpty(sttToken))
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                await context.Response.WriteAsync("access_token query parameter is required.");
+                return;
+            }
+
+            var sessionId = Guid.NewGuid().ToString();
             var service = context.RequestServices.GetRequiredService<IAudioStreamService>();
 
             using var socket = await context.WebSockets.AcceptWebSocketAsync();
-            await service.RelayAsync(socket, context.RequestAborted);
+            await service.RelayAsync(socket, sttToken, sessionId, context.RequestAborted);
         });
 
         return endpoints;
