@@ -32,9 +32,9 @@ public class AudioStreamService : IAudioStreamService
         try
         {
             var tokenToUse = string.IsNullOrEmpty(_audioStream.SttApiToken) ? sttToken : _audioStream.SttApiToken;
-            var sttUrl = $"{_audioStream.DownstreamServiceUrl}?token={Uri.EscapeDataString(tokenToUse)}";
+            var sttUrl = $"{_audioStream.SttServiceUrl}?token={Uri.EscapeDataString(tokenToUse)}";
             await downstream.ConnectAsync(new Uri(sttUrl), cts.Token);
-            _logger.LogInformation("Connected to STT service at {Url} for session {SessionId}.", _audioStream.DownstreamServiceUrl, sessionId);
+            _logger.LogInformation("Connected to STT service at {Url} for session {SessionId}.", _audioStream.SttServiceUrl, sessionId);
 
             var clientToDownstream = ForwardClientToDownstreamAsync(clientSocket, downstream, sessionId, cts.Token);
             var downstreamToClient = ForwardDownstreamToClientAsync(downstream, clientSocket, sessionId, cts.Token);
@@ -48,6 +48,8 @@ public class AudioStreamService : IAudioStreamService
             }
 
             var sttResult = downstreamToClient.Result;
+            _logger.LogInformation($"Result from STT Service - {sttResult}");
+
 
             if (sttResult is not null)
             {

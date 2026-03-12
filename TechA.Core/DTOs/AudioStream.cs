@@ -4,7 +4,7 @@ public class AudioStream
 {
     public const string SectionName = "AudioStream";
 
-    public string DownstreamServiceUrl { get; set; } = string.Empty;
+    public string SttServiceUrl { get; set; } = string.Empty;
 
     public int BufferSize { get; set; } = 4 * 1024;
 
