@@ -5,9 +5,9 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using TechA.Core.DTOs;
-using TechA.Core.Interfaces.Service;
+using TechA.Core.Interfaces.Domain;
 
-namespace TechA.Service;
+namespace TechA.Services;
 
 public class AudioStreamService : IAudioStreamService
 {

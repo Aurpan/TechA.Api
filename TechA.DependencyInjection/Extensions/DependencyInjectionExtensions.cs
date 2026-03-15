@@ -5,11 +5,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using TechA.Core.DTOs;
-using TechA.Core.Interfaces.Service;
-using TechA.Repository.Data;
-using TechA.Repository.Interfaces;
-using TechA.Repository.Repositories;
-using TechA.Service;
+using TechA.Core.Interfaces.Domain;
+using TechA.Core.Interfaces.Persistence;
+using TechA.DataManagement.DbContext;
+using TechA.DataManagement.Persistence.Repositories;
+using TechA.Services;
 
 namespace TechA.DependencyInjection.Extensions;
 
@@ -17,10 +17,10 @@ public static class DependencyInjectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<ApplicationDbContext>(options =>
+        services.AddDbContext<TechADbContext>(options =>
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
-                npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
+                npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(TechADbContext).Assembly.FullName)
             )
             .UseSnakeCaseNamingConvention()
         );

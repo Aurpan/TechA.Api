@@ -1,6 +1,6 @@
-using TechA.Repository.Entities;
+using TechA.Core.Entities;
 
-namespace TechA.Repository.Interfaces;
+namespace TechA.Core.Interfaces.Persistence;
 
 public interface IUserRepository
 {

@@ -1,7 +1,7 @@
-using TechA.Core.RequestObjects.Auth;
-using TechA.Core.ResponseObjects;
+using TechA.Core.Requests.Auth;
+using TechA.Core.Responses;
 
-namespace TechA.Core.Interfaces.Service;
+namespace TechA.Core.Interfaces.Domain;
 
 public interface IAuthService
 {

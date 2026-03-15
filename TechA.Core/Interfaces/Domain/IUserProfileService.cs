@@ -1,7 +1,7 @@
 using TechA.Core.DTOs;
-using TechA.Core.RequestObjects.Profile;
+using TechA.Core.Requests.Profile;
 
-namespace TechA.Core.Interfaces.Service;
+namespace TechA.Core.Interfaces.Domain;
 
 public interface IUserProfileService
 {

@@ -1,10 +1,11 @@
-using TechA.Core.Interfaces.Service;
-using TechA.Core.RequestObjects.Profile;
-using TechA.Repository.Entities;
-using TechA.Repository.Interfaces;
+using TechA.Core.DTOs;
+using TechA.Core.Entities;
+using TechA.Core.Interfaces.Domain;
+using TechA.Core.Interfaces.Persistence;
+using TechA.Core.Requests.Profile;
 using UserProfileDto = TechA.Core.DTOs.UserProfile;
 
-namespace TechA.Service;
+namespace TechA.Services;
 
 public class UserProfileService : IUserProfileService
 {
@@ -32,7 +33,7 @@ public class UserProfileService : IUserProfileService
         if (user is null)
             return null;
 
-        user.Profile ??= new UserProfile { UserId = user.Id };
+        user.Profile ??= new Core.Entities.UserProfile { UserId = user.Id };
 
         var profile = user.Profile;
 
@@ -77,7 +78,7 @@ public class UserProfileService : IUserProfileService
         return MapToDto(user);
     }
 
-    private static UserProfileDto MapToDto(User user)
+    private static UserProfileDto MapToDto(Core.Entities.User user)
     {
         var profile = user.Profile;
 

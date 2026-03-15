@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TechA.DependencyInjection\TechA.DependencyInjection.csproj" />
-    <ProjectReference Include="..\TechA.Service\TechA.Service.csproj" />
+    <ProjectReference Include="..\TechA.Service\TechA.Services.csproj" />
   </ItemGroup>
 
 </Project>

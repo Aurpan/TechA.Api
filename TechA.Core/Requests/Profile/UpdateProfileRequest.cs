@@ -1,14 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TechA.Repository.Entities;
+namespace TechA.Core.Requests.Profile;
 
-public class UserProfile
+public class UpdateProfileRequest
 {
-    [Key]
-    public Guid Id { get; set; } = Guid.NewGuid();
-
-    public Guid UserId { get; set; }
-
     [MaxLength(50)]
     public string? FirstName { get; set; }
 
@@ -40,6 +35,4 @@ public class UserProfile
 
     [MaxLength(20)]
     public string? ZipCode { get; set; }
-
-    public User User { get; set; } = null!;
 }

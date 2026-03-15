@@ -1,6 +1,6 @@
 using System.Net.WebSockets;
 
-namespace TechA.Core.Interfaces.Service;
+namespace TechA.Core.Interfaces.Domain;
 
 public interface ILlmService
 {

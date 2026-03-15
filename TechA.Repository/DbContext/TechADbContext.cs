@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using TechA.Repository.Entities;
+using TechA.Core.Entities;
 
-namespace TechA.Repository.Data;
+namespace TechA.DataManagement.DbContext;
 
-public class ApplicationDbContext : DbContext
+public class TechADbContext : Microsoft.EntityFrameworkCore.DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    public TechADbContext(DbContextOptions<TechADbContext> options)
         : base(options)
     {
     }

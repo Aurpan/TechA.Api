@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TechA.Core.RequestObjects.Auth;
+namespace TechA.Core.Requests.Auth;
 
 public class GoogleAuthRequest
 {

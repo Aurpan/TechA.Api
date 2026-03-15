@@ -1,16 +1,15 @@
-using Microsoft.EntityFrameworkCore;
 using TechA.Core.Enums;
-using TechA.Core.Interfaces.Service;
-using TechA.Core.ResponseObjects;
-using TechA.Repository.Data;
+using TechA.Core.Interfaces.Domain;
+using TechA.Core.Responses;
+using TechA.DataManagement.DbContext;
 
-namespace TechA.Service;
+namespace TechA.Services;
 
 public class HealthCheckService : IHealthCheckService
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly TechADbContext _dbContext;
 
-    public HealthCheckService(ApplicationDbContext dbContext)
+    public HealthCheckService(TechADbContext dbContext)
     {
         _dbContext = dbContext;
     }

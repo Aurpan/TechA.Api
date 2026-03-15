@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace TechA.Repository.Migrations
+namespace TechA.DataManagement.Migrations
 {
     /// <inheritdoc />
     public partial class MoveDisplayNameToUser : Migration

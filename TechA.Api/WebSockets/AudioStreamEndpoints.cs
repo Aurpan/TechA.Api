@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using TechA.Core.Interfaces.Service;
+using TechA.Core.Interfaces.Domain;
 
 namespace TechA.Api.WebSockets;
 

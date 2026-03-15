@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TechA.Repository\TechA.Repository.csproj" />
-    <ProjectReference Include="..\TechA.Service\TechA.Service.csproj" />
+    <ProjectReference Include="..\TechA.Repository\TechA.DataManagement.csproj" />
+    <ProjectReference Include="..\TechA.Service\TechA.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>

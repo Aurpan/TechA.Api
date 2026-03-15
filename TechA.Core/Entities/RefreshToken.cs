@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TechA.Repository.Entities;
+namespace TechA.Core.Entities;
 
 public class RefreshToken
 {

@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using TechA.Repository.Data;
-using TechA.Repository.Entities;
-using TechA.Repository.Interfaces;
+using TechA.Core.Entities;
+using TechA.Core.Interfaces.Persistence;
+using TechA.DataManagement.DbContext;
 
-namespace TechA.Repository.Repositories;
+namespace TechA.DataManagement.Persistence.Repositories;
 
 public class UserRepository : IUserRepository
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly TechADbContext _dbContext;
 
-    public UserRepository(ApplicationDbContext dbContext)
+    public UserRepository(TechADbContext dbContext)
     {
         _dbContext = dbContext;
     }

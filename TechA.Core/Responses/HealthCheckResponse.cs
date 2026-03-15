@@ -1,6 +1,6 @@
 ﻿using TechA.Core.Enums;
 
-namespace TechA.Core.ResponseObjects
+namespace TechA.Core.Responses
 {
     public class HealthCheckResponse
     {

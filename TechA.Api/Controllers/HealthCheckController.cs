@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TechA.Core.Enums;
-using TechA.Core.Interfaces.Service;
+using TechA.Core.Interfaces.Domain;
 
 namespace TechA.Api.Controllers;
 

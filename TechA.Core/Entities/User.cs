@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using TechA.Core.Enums;
 
-namespace TechA.Repository.Entities;
+namespace TechA.Core.Entities;
 
 public class User
 {

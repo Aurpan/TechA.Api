@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TechA.Core\TechA.Core.csproj" />
-    <ProjectReference Include="..\TechA.Repository\TechA.Repository.csproj" />
+    <ProjectReference Include="..\TechA.Repository\TechA.DataManagement.csproj" />
   </ItemGroup>
 
 </Project>

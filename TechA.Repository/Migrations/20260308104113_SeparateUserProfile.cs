@@ -1,9 +1,8 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace TechA.Repository.Migrations
+namespace TechA.DataManagement.Migrations
 {
     /// <inheritdoc />
     public partial class SeparateUserProfile : Migration

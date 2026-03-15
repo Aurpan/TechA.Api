@@ -1,8 +1,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TechA.Core.Interfaces.Service;
-using TechA.Core.RequestObjects.Profile;
+using TechA.Core.Interfaces.Domain;
+using TechA.Core.Requests.Profile;
 
 namespace TechA.Api.Controllers;
 

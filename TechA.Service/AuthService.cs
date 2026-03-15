@@ -1,26 +1,25 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using TechA.Core.DTOs;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using TechA.Core.Entities;
 using TechA.Core.Enums;
-using TechA.Core.Interfaces.Service;
-using TechA.Core.RequestObjects.Auth;
-using TechA.Core.ResponseObjects;
-using TechA.Repository.Data;
-using TechA.Repository.Entities;
+using TechA.Core.Interfaces.Domain;
+using TechA.Core.Requests.Auth;
+using TechA.Core.Responses;
+using TechA.DataManagement.DbContext;
 
-namespace TechA.Service;
+namespace TechA.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly TechADbContext _dbContext;
     private readonly IConfiguration _configuration;
 
-    public AuthService(ApplicationDbContext dbContext, IConfiguration configuration)
+    public AuthService(TechADbContext dbContext, IConfiguration configuration)
     {
         _dbContext = dbContext;
         _configuration = configuration;
@@ -35,7 +34,7 @@ public class AuthService : IAuthService
             return new AuthResponse { Success = false, Message = "Email is already registered." };
         }
 
-        var user = new Repository.Entities.User
+        var user = new User
         {
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
@@ -81,12 +80,12 @@ public class AuthService : IAuthService
 
         if (user is null)
         {
-            user = new Repository.Entities.User
+            user = new User
             {
                 Email = payload.Email,
                 DisplayName = payload.Name,
                 AuthProvider = AuthProvider.Google,
-                Profile = new Repository.Entities.UserProfile
+                Profile = new UserProfile
                 {
                     ProfilePictureUrl = payload.Picture
                 }
@@ -99,7 +98,7 @@ public class AuthService : IAuthService
         return new AuthResponse { Success = true, Token = GenerateJwtToken(user), User = MapToDto(user) };
     }
 
-    private static Core.DTOs.User MapToDto(Repository.Entities.User user) => new()
+    private static Core.DTOs.User MapToDto(User user) => new()
     {
         Id = user.Id,
         Email = user.Email,
@@ -108,7 +107,7 @@ public class AuthService : IAuthService
         CreatedAt = user.CreatedAt
     };
 
-    private string GenerateJwtToken(Repository.Entities.User user)
+    private string GenerateJwtToken(User user)
     {
         var jwtSection = _configuration.GetSection("Jwt");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));

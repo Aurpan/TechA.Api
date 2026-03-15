@@ -1,6 +1,6 @@
 using TechA.Core.DTOs;
 
-namespace TechA.Core.ResponseObjects;
+namespace TechA.Core.Responses;
 
 public class AuthResponse
 {

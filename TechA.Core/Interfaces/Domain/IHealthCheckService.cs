@@ -1,6 +1,6 @@
-﻿using TechA.Core.ResponseObjects;
+﻿using TechA.Core.Responses;
 
-namespace TechA.Core.Interfaces.Service
+namespace TechA.Core.Interfaces.Domain
 {
     public interface IHealthCheckService
     {

@@ -1,15 +1,15 @@
 <Solution>
-  <Folder Name="/Api/">
-    <Project Path="TechA.Api/TechA.Api.csproj" />
+  <Folder Name="/Application/">
+    <Project Path="TechA.Service/TechA.Services.csproj" Id="52cceec4-e09d-406c-8212-de9552214794" />
   </Folder>
-  <Folder Name="/Business Layer/">
-    <Project Path="TechA.Service/TechA.Service.csproj" Id="52cceec4-e09d-406c-8212-de9552214794" />
-  </Folder>
-  <Folder Name="/Common/">
+  <Folder Name="/Domain/">
     <Project Path="TechA.Core/TechA.Core.csproj" Id="e46f71b4-9602-46f3-9f94-929081478781" />
-    <Project Path="TechA.DependencyInjection/TechA.DependencyInjection.csproj" />
   </Folder>
-  <Folder Name="/Data Access Layer/">
-    <Project Path="TechA.Repository/TechA.Repository.csproj" Id="02dbeefa-886b-4560-87a4-d1e8327acd2f" />
+  <Folder Name="/Infrastructure/">
+    <Project Path="TechA.DependencyInjection/TechA.DependencyInjection.csproj" />
+    <Project Path="TechA.Repository/TechA.DataManagement.csproj" Id="02dbeefa-886b-4560-87a4-d1e8327acd2f" />
+  </Folder>
+  <Folder Name="/Presentation/">
+    <Project Path="TechA.Api/TechA.Api.csproj" />
   </Folder>
 </Solution>
