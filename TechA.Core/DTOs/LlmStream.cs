@@ -6,7 +6,7 @@ public class LlmStream
 
     public string BaseUrl { get; set; } = string.Empty;
 
-    public string GenerateEndpoint { get; set; } = "/v1/llm/generate:stream";
+    public string GenerateEndpoint { get; set; } = "/v1/llm/extract:expenses";
 
     public double Temperature { get; set; } = 0.3;
 

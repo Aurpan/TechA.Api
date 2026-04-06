@@ -36,7 +36,7 @@ public class AudioStreamService : IAudioStreamService
             await downstream.ConnectAsync(new Uri(sttUrl), cts.Token);
             _logger.LogInformation("Connected to STT service at {Url} for session {SessionId}.", _audioStream.SttServiceUrl, sessionId);
 
-            var clientToDownstream = ForwardClientToDownstreamAsync(clientSocket, downstream, sessionId, cts.Token);
+            var clientToDownstream = ForwardClientToDownstreamAsync(clientSocket, downstream, sessionId, cts.Token, tokenToUse);
             var downstreamToClient = ForwardDownstreamToClientAsync(downstream, clientSocket, sessionId, cts.Token);
 
             var completed = await Task.WhenAny(clientToDownstream, downstreamToClient);
@@ -59,7 +59,8 @@ public class AudioStreamService : IAudioStreamService
                     sttResult.Text ?? string.Empty,
                     sttResult.Language ?? "en",
                     clientSocket,
-                    cancellationToken);
+                    cancellationToken,
+                    tokenToUse);
             }
 
             await cts.CancelAsync();
@@ -82,7 +83,7 @@ public class AudioStreamService : IAudioStreamService
         }
     }
 
-    private async Task ForwardClientToDownstreamAsync(WebSocket client, WebSocket downstream, string sessionId, CancellationToken cancellationToken)
+    private async Task ForwardClientToDownstreamAsync(WebSocket client, WebSocket downstream, string sessionId, CancellationToken cancellationToken, string? serviceSecretKey = null)
     {
         var buffer = ArrayPool<byte>.Shared.Rent(_audioStream.BufferSize);
         var audioBytesReceived = 0L;
@@ -110,7 +111,9 @@ public class AudioStreamService : IAudioStreamService
                     try
                     {
                         using var doc = JsonDocument.Parse(json);
-                        var messageType = doc.RootElement.GetProperty("type").GetString();
+                        var messageType = doc.RootElement.TryGetProperty("type", out var typeProp)
+                            ? typeProp.GetString()
+                            : null;
                         var clientSessionId = doc.RootElement.TryGetProperty("sessionId", out var sidProp)
                             ? sidProp.GetString()
                             : null;
@@ -131,23 +134,25 @@ public class AudioStreamService : IAudioStreamService
                                     encoding, sampleRate, channels);
                             }
                         }
-                        else if (messageType == "end")
+                        else if (messageType == "stop")
                         {
                             endReceived = true;
-                            _logger.LogInformation("Received END for session {SessionId}. Total: {AudioChunks} chunks, {AudioBytes} bytes.",
+                            _logger.LogInformation("Received STOP for session {SessionId}. Total: {AudioChunks} chunks, {AudioBytes} bytes.",
                                 sessionId, audioChunksReceived, audioBytesReceived);
                         }
                         else
                         {
                             _logger.LogWarning("Unknown message type '{MessageType}' for session {SessionId}.", messageType, sessionId);
+                            continue;
                         }
                     }
                     catch (JsonException ex)
                     {
                         _logger.LogError(ex, "Invalid JSON in control message for session {SessionId}: {Json}.", sessionId, json);
+                        continue;
                     }
 
-                    var patched = PatchSessionId(json, sessionId);
+                    var patched = PatchSessionId(json, sessionId, serviceSecretKey);
                     var patchedBytes = Encoding.UTF8.GetBytes(patched);
 
                     if (downstream.State == WebSocketState.Open)
@@ -193,7 +198,7 @@ public class AudioStreamService : IAudioStreamService
         }
     }
 
-    private static string PatchSessionId(string json, string sessionId)
+    private static string PatchSessionId(string json, string sessionId, string? token = null)
     {
         using var doc = JsonDocument.Parse(json);
         using var stream = new MemoryStream();
@@ -207,10 +212,19 @@ public class AudioStreamService : IAudioStreamService
                 {
                     writer.WriteString("sessionId", sessionId);
                 }
+                else if (prop.Name == "token")
+                {
+                    // skip existing token; we'll write it below
+                }
                 else
                 {
                     prop.WriteTo(writer);
                 }
+            }
+
+            if (token is not null)
+            {
+                writer.WriteString("token", token);
             }
 
             writer.WriteEndObject();
@@ -222,6 +236,7 @@ public class AudioStreamService : IAudioStreamService
     private async Task<SttFinalResult?> ForwardDownstreamToClientAsync(WebSocket source, WebSocket destination, string sessionId, CancellationToken cancellationToken)
     {
         var buffer = ArrayPool<byte>.Shared.Rent(_audioStream.BufferSize);
+        var sttTexts = new List<string>();
         SttFinalResult? sttResult = null;
 
         try
@@ -263,8 +278,12 @@ public class AudioStreamService : IAudioStreamService
                                 "Received stt.final for session {SessionId}: lang={Language}, text=\"{Text}\".",
                                 sessionId, language, text);
 
+                            if (!string.IsNullOrEmpty(text))
+                            {
+                                sttTexts.Add(text);
+                            }
+
                             sttResult = new SttFinalResult { Text = text, Language = language };
-                            break;
                         }
                     }
                     catch (JsonException ex)
@@ -277,6 +296,14 @@ public class AudioStreamService : IAudioStreamService
         finally
         {
             ArrayPool<byte>.Shared.Return(buffer);
+        }
+
+        if (sttResult is not null && sttTexts.Count > 0)
+        {
+            sttResult.Text = string.Join(" ", sttTexts);
+            _logger.LogInformation(
+                "Combined {Count} stt.final result(s) for session {SessionId}: \"{Text}\".",
+                sttTexts.Count, sessionId, sttResult.Text);
         }
 
         return sttResult;

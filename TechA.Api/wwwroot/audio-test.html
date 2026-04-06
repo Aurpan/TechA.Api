@@ -839,9 +839,9 @@
                 }
 
                 // Send end message to signal audio stream has ended
-                const endMsg = buildControlMessage('end');
+                const endMsg = buildControlMessage('stop');
                 websocket.send(endMsg);
-                log(`📤 Sent END message: ${endMsg}`, 'success');
+                log(`📤 Sent STOP message: ${endMsg}`, 'success');
                 log('ℹ️  Audio stopped. Waiting for stt.final and LLM response...', 'info');
 
                 // Stop the duration timer

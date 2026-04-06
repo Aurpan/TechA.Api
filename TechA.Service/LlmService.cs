@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Net.Http.Json;
 using System.Net.WebSockets;
 using System.Text;
-using System.Text.Json;
 using TechA.Core.DTOs;
 using TechA.Core.Interfaces.Domain;
 
@@ -10,45 +10,31 @@ namespace TechA.Services;
 
 public class LlmService : ILlmService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
-    private readonly HttpClient _httpClient;
     private readonly LlmStream _options;
     private readonly ILogger<LlmService> _logger;
 
     public LlmService(HttpClient httpClient, IOptions<LlmStream> options, ILogger<LlmService> logger)
     {
-        _httpClient = httpClient;
         _options = options.Value;
         _logger = logger;
     }
 
-    public async Task StreamToClientAsync(string sessionId, string userText, string language, WebSocket clientSocket, CancellationToken cancellationToken)
+    public async Task StreamToClientAsync(string sessionId, string userText, string language, WebSocket clientSocket, CancellationToken cancellationToken, string tokenToUse)
     {
-        var requestBody = new
-        {
-            sessionId,
-            userText,
-            language,
-            generation = new
-            {
-                temperature = _options.Temperature,
-                maxOutputTokens = _options.MaxOutputTokens
-            }
-        };
-
-        var json = JsonSerializer.Serialize(requestBody, JsonOptions);
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-
         var endpoint = _options.GenerateEndpoint.TrimStart('/');
-        _logger.LogInformation("Calling LLM for session {SessionId}: {Endpoint}", sessionId, endpoint);
+        var url = $"{_options.BaseUrl.TrimEnd('/')}/{endpoint}";
+        _logger.LogInformation("Calling LLM for session {SessionId}: {Url}", sessionId, url);
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint) { Content = content };
+        using var http = new HttpClient();
+        http.DefaultRequestHeaders.Add("X-Internal-Token", tokenToUse);
 
         if (!string.IsNullOrEmpty(_options.ApiToken))
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _options.ApiToken);
+            http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _options.ApiToken);
 
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        using var response = await http.PostAsJsonAsync(
+            url,
+            new { session_id = sessionId, user_text = userText, language },
+            cancellationToken);
         response.EnsureSuccessStatusCode();
 
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
