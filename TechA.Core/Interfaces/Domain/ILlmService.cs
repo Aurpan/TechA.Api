@@ -4,5 +4,5 @@ namespace TechA.Core.Interfaces.Domain;
 
 public interface ILlmService
 {
-    Task StreamToClientAsync(string sessionId, string userText, string language, WebSocket clientSocket, CancellationToken cancellationToken, string tokenToUse);
+    Task<string> StreamToClientAsync(string sessionId, string userText, string language, WebSocket clientSocket, CancellationToken cancellationToken, string tokenToUse);
 }

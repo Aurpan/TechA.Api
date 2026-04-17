@@ -66,6 +66,7 @@ public static class DependencyInjectionExtensions
         services.Configure<LlmStream>(configuration.GetSection(LlmStream.SectionName));
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ILlmResponseRepository, LlmResponseRepository>();
 
         services.AddScoped<IHealthCheckService, HealthCheckService>();
         services.AddScoped<IAuthService, AuthService>();

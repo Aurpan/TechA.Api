@@ -5,7 +5,9 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using TechA.Core.DTOs;
+using TechA.Core.Entities;
 using TechA.Core.Interfaces.Domain;
+using TechA.Core.Interfaces.Persistence;
 
 namespace TechA.Services;
 
@@ -15,16 +17,18 @@ public class AudioStreamService : IAudioStreamService
 
     private readonly AudioStream _audioStream;
     private readonly ILlmService _llmService;
+    private readonly ILlmResponseRepository _llmResponseRepository;
     private readonly ILogger<AudioStreamService> _logger;
 
-    public AudioStreamService(IOptions<AudioStream> options, ILlmService llmService, ILogger<AudioStreamService> logger)
+    public AudioStreamService(IOptions<AudioStream> options, ILlmService llmService, ILlmResponseRepository llmResponseRepository, ILogger<AudioStreamService> logger)
     {
         _audioStream = options.Value;
         _llmService = llmService;
+        _llmResponseRepository = llmResponseRepository;
         _logger = logger;
     }
 
-    public async Task RelayAsync(WebSocket clientSocket, string sttToken, string sessionId, CancellationToken cancellationToken)
+    public async Task RelayAsync(WebSocket clientSocket, string sttToken, string sessionId, string userId, CancellationToken cancellationToken)
     {
         using var downstream = new ClientWebSocket();
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -54,13 +58,27 @@ public class AudioStreamService : IAudioStreamService
             if (sttResult is not null)
             {
                 _logger.LogInformation("Calling LLM for session {SessionId} with text: \"{Text}\".", sessionId, sttResult.Text);
-                await _llmService.StreamToClientAsync(
+                var llmJson = await _llmService.StreamToClientAsync(
                     sessionId,
                     sttResult.Text ?? string.Empty,
                     sttResult.Language ?? "en",
                     clientSocket,
                     cancellationToken,
                     tokenToUse);
+
+                if (!string.IsNullOrEmpty(llmJson))
+                {
+                    var llmResponse = new LlmResponse
+                    {
+                        UserId = Guid.Parse(userId),
+                        SessionId = sessionId,
+                        ResponseJson = llmJson,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _llmResponseRepository.AddAsync(llmResponse);
+                    _logger.LogInformation("Saved LLM response to DB for session {SessionId}, user {UserId}.", sessionId, userId);
+                }
             }
 
             await cts.CancelAsync();

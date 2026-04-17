@@ -8,6 +8,7 @@ public class TechADbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<LlmResponse> LlmResponses { get; set; }
 
     public TechADbContext(DbContextOptions<TechADbContext> options)
         : base(options)
@@ -45,6 +46,17 @@ public class TechADbContext : Microsoft.EntityFrameworkCore.DbContext
             entity.HasOne(rt => rt.User)
                   .WithMany(u => u.RefreshTokens)
                   .HasForeignKey(rt => rt.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<LlmResponse>(entity =>
+        {
+            entity.HasIndex(lr => lr.SessionId);
+            entity.Property(lr => lr.CreatedAt).HasDefaultValueSql("NOW() AT TIME ZONE 'UTC'");
+
+            entity.HasOne(lr => lr.User)
+                  .WithMany()
+                  .HasForeignKey(lr => lr.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }

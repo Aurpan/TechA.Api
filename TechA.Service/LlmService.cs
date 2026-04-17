@@ -19,7 +19,7 @@ public class LlmService : ILlmService
         _logger = logger;
     }
 
-    public async Task StreamToClientAsync(string sessionId, string userText, string language, WebSocket clientSocket, CancellationToken cancellationToken, string tokenToUse)
+    public async Task<string> StreamToClientAsync(string sessionId, string userText, string language, WebSocket clientSocket, CancellationToken cancellationToken, string tokenToUse)
     {
         var endpoint = _options.GenerateEndpoint.TrimStart('/');
         var url = $"{_options.BaseUrl.TrimEnd('/')}/{endpoint}";
@@ -40,6 +40,7 @@ public class LlmService : ILlmService
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         var buffer = new byte[4096];
         int bytesRead;
+        var responseBuilder = new StringBuilder();
 
         while ((bytesRead = await stream.ReadAsync(buffer, cancellationToken)) > 0)
         {
@@ -55,9 +56,11 @@ public class LlmService : ILlmService
                 endOfMessage: false,
                 cancellationToken);
 
+            var chunk = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            responseBuilder.Append(chunk);
+
             if (_logger.IsEnabled(LogLevel.Debug))
             {
-                var chunk = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                 _logger.LogDebug("LLM chunk for session {SessionId}: {Chunk}", sessionId, chunk);
             }
         }
@@ -72,5 +75,6 @@ public class LlmService : ILlmService
         }
 
         _logger.LogInformation("LLM streaming completed for session {SessionId}.", sessionId);
+        return responseBuilder.ToString();
     }
 }

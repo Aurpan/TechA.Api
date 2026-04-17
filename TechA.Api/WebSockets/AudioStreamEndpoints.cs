@@ -38,7 +38,7 @@ public static class AudioStreamEndpoints
             var service = context.RequestServices.GetRequiredService<IAudioStreamService>();
 
             using var socket = await context.WebSockets.AcceptWebSocketAsync();
-            await service.RelayAsync(socket, sttToken, sessionId, context.RequestAborted);
+            await service.RelayAsync(socket, sttToken, sessionId, userId, context.RequestAborted);
         });
 
         return endpoints;

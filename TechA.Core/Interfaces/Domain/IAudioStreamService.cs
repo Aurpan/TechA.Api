@@ -4,5 +4,5 @@ namespace TechA.Core.Interfaces.Domain;
 
 public interface IAudioStreamService
 {
-    Task RelayAsync(WebSocket clientSocket, string sttToken, string sessionId, CancellationToken cancellationToken);
+    Task RelayAsync(WebSocket clientSocket, string sttToken, string sessionId, string userId, CancellationToken cancellationToken);
 }
