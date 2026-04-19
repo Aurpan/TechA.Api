@@ -67,10 +67,12 @@ public static class DependencyInjectionExtensions
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ILlmResponseRepository, LlmResponseRepository>();
+        services.AddScoped<IExpenseTransactionRepository, ExpenseTransactionRepository>();
 
         services.AddScoped<IHealthCheckService, HealthCheckService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserProfileService, UserProfileService>();
+        services.AddScoped<IExpenseTransactionService, ExpenseTransactionService>();
         services.AddTransient<IAudioStreamService, AudioStreamService>();
 
         var llmConfig = configuration.GetSection(LlmStream.SectionName);

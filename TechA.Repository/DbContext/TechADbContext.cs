@@ -9,6 +9,7 @@ public class TechADbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<LlmResponse> LlmResponses { get; set; }
+    public DbSet<ExpenseTransaction> ExpenseTransactions { get; set; }
 
     public TechADbContext(DbContextOptions<TechADbContext> options)
         : base(options)
